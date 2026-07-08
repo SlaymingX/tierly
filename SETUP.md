@@ -1,4 +1,4 @@
-# Pro Tier List Builder — Google Login + Drive Sync Setup
+# Tierly — Google Login + Drive Sync Setup
 
 This turns your app into a PWA that signs users in with Google and saves/loads
 their tier lists from a private folder in their own Google Drive (the

@@ -1,7 +1,7 @@
 {
-  "name": "Pro Tier List Builder",
-  "short_name": "Tier List",
-  "description": "Build, customize, and export tier lists.",
+  "name": "Tierly",
+  "short_name": "Tierly",
+  "description": "Tierly - build, customize, and export tier lists.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
