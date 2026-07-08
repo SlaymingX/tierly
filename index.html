@@ -459,7 +459,7 @@
      page — pin it to the bottom of the viewport instead, collapsible so it
      doesn't permanently eat screen space. */
   @media (max-width: 768px) {
-    .container { padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px)); }
+    .container { padding-bottom: calc(180px + env(safe-area-inset-bottom, 0px)); }
 
     .pool-section {
       position: fixed;
@@ -494,9 +494,14 @@
     }
     .pool-section.collapsed h3::after { transform: rotate(-90deg); }
     .pool-section .pool-drop-zone {
+      box-sizing: border-box;
+      height: 112px; /* one row of images (~88px) + a peek of the next row as a scroll hint */
+      max-height: none;
       overflow-y: auto;
+      overflow-x: hidden;
       padding: 0 16px 16px;
       margin: 0;
+      align-content: flex-start;
     }
     .pool-section.collapsed .pool-drop-zone { display: none; }
   }
