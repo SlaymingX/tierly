@@ -1,0 +1,1662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Pro Tier List Builder</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#121212">
+<meta name="background-color" content="#121212">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Tier List">
+
+<!-- Icons -->
+<link rel="icon" type="image/png" sizes="48x48" href="icons/favicon-48.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
+<style>
+  :root {
+    --bg-main: #121212;
+    --bg-surface: #1e1e1e;
+    --border-color: #2c2c2c;
+    --text-primary: #f5f5f5;
+    --text-muted: #888888;
+    --accent: #5e6ad2;
+    --accent-hover: #6f7bf0;
+    --danger: #e25c5c;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    
+    /* Tier Colors */
+    --tier-s: #ff7f7f;
+    --tier-a: #ffbf7f;
+    --tier-b: #ffdf7f;
+    --tier-c: #ffff7f;
+    --tier-d: #bfff7f;
+  }
+
+  * { box-sizing: border-box; }
+  
+  body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* --- Typography & Basics --- */
+  h1, h2, h3 { margin: 0; font-weight: 600; }
+  button {
+    font-family: inherit; cursor: pointer; border: none;
+    transition: all 0.2s ease;
+  }
+  [contenteditable="true"] {
+    outline: none;
+    cursor: text;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: background 0.2s;
+  }
+  [contenteditable="true"]:hover { background: rgba(255, 255, 255, 0.1); }
+  [contenteditable="true"]:focus { background: rgba(0, 0, 0, 0.2); }
+
+  /* --- Layout --- */
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 32px 24px;
+    width: 100%;
+    flex: 1;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .header-titles p {
+    color: var(--text-muted);
+    margin: 6px 0 0;
+    font-size: 14px;
+  }
+
+  .toolbar {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .btn {
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn:hover { background: #2a2a2a; }
+  .btn.primary {
+    background: var(--accent); border-color: var(--accent); color: white;
+  }
+  .btn.primary:hover { background: var(--accent-hover); }
+  .btn.danger { color: var(--danger); }
+  .btn.danger:hover { background: rgba(226, 92, 92, 0.1); border-color: var(--danger); }
+
+  /* Hidden Native Inputs */
+  input[type="file"] { display: none; }
+  input[type="color"] {
+    position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none;
+  }
+
+  /* --- Dashboard --- */
+  .dashboard-grid { 
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
+    gap: 24px; margin-top: 32px; 
+  }
+  .list-card { 
+    background: var(--bg-surface); 
+    border: 1px solid var(--border-color); 
+    border-radius: 12px; 
+    cursor: pointer; 
+    transition: 0.2s; 
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .list-card:hover { border-color: var(--accent); transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.4); }
+  
+  .list-cover {
+    height: 160px;
+    background-color: #111;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    border-bottom: 1px solid var(--border-color);
+  }
+  .list-cover-placeholder {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    color: rgba(255,255,255,0.1); font-size: 48px;
+  }
+  .list-card-content { padding: 20px; }
+  
+  .set-cover-btn {
+    position: absolute;
+    top: 12px; right: 12px;
+    background: rgba(0,0,0,0.7); color: white;
+    padding: 6px 12px; border-radius: 6px; font-size: 12px;
+    opacity: 0; transition: opacity 0.2s; backdrop-filter: blur(4px);
+  }
+  .list-cover:hover .set-cover-btn { opacity: 1; }
+  .set-cover-btn:hover { background: var(--accent); }
+
+  /* --- Board & Tiers --- */
+  .board {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    margin-bottom: 32px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+  .board::-webkit-scrollbar { height: 8px; }
+  .board::-webkit-scrollbar-track { background: var(--bg-surface); }
+  .board::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+  .board::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+  .tier-row {
+    display: flex;
+    min-height: 112px; /* Matches exact height of 1 filled row (96px line-height + 16px padding) */
+    border-bottom: 1px solid var(--border-color);
+    background: #181818;
+    position: relative;
+    align-items: stretch;
+    width: 100%;
+    min-width: min-content;
+  }
+  .tier-row:last-child { border-bottom: none; }
+
+  /* Tier Label */
+  .tier-label {
+    flex: 0 0 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-weight: 700;
+    font-size: 20px;
+    color: #111;
+    border-right: 1px solid var(--border-color);
+    position: sticky;
+    left: 0;
+    z-index: 10;
+    line-height: 1.2; 
+  }
+  .tier-label-text {
+    width: 100%;
+    padding: 8px;
+    word-wrap: break-word;
+  }
+  
+  /* Hover Actions for Tier Label */
+  .tier-actions {
+    position: absolute;
+    top: 4px; right: 4px;
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .tier-label:hover .tier-actions { opacity: 1; }
+  .action-btn {
+    width: 24px; height: 24px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.2);
+    color: inherit;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    backdrop-filter: blur(4px);
+  }
+  .action-btn:hover { background: rgba(255,255,255,0.4); }
+
+  /* Tier Content Area - Block display for inline wrapping */
+  .tier-content {
+    flex: 1;
+    display: block; 
+    padding: 8px;
+    line-height: 96px; 
+    font-size: 0; 
+    position: relative;
+    text-align: left;
+    transition: background 0.2s;
+  }
+  .tier-content.dragover {
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  /* Row Controls (Right side) */
+  .row-controls {
+    flex: 0 0 40px;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-surface);
+    border-left: 1px solid var(--border-color);
+    opacity: 0.2;
+    transition: opacity 0.2s;
+    position: sticky;
+    right: 0;
+    z-index: 10;
+  }
+  .tier-row:hover .row-controls { opacity: 1; }
+  .row-controls button, .row-controls .drag-handle {
+    flex: 1; background: transparent; color: var(--text-muted);
+    font-size: 14px; border-bottom: 1px solid var(--border-color);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .row-controls button:last-child, .row-controls .drag-handle:last-child { border-bottom: none; }
+  .row-controls button:hover, .row-controls .drag-handle:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
+  .row-controls button.del:hover { color: var(--danger); background: rgba(226,92,92,0.1); }
+
+  .row-controls .drag-handle { cursor: grab; font-size: 18px; user-select: none; }
+  .row-controls .drag-handle:active { cursor: grabbing; }
+
+  /* Tier Drag States */
+  .tier-row.dragging-tier { opacity: 0.4; z-index: 20; }
+  .tier-row.dragover-tier-top::before,
+  .tier-row.dragover-tier-bottom::before {
+    content: ''; position: absolute; left: 0; right: 0; height: 3px; background: var(--accent); z-index: 30; pointer-events: none;
+  }
+  .tier-row.dragover-tier-top::before { top: -1px; }
+  .tier-row.dragover-tier-bottom::before { bottom: -1px; }
+
+  /* --- Subgroups - INLINE FLOW PARADIGM --- */
+  .subgroup {
+    line-height: 1.4; /* Resets inherited line-height for text */
+  }
+
+  .subgroup.filled {
+    display: inline; 
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+    background-color: var(--sg-bg);
+    border: 1px solid var(--sg-border);
+    border-radius: 8px;
+    padding: 43px 4px; 
+    margin-right: 8px;
+    transition: background-color 0.2s ease;
+  }
+  
+  .subgroup.empty {
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-width: 120px;
+    height: 80px;
+    vertical-align: middle;
+    margin: 4px;
+    border: 2px dashed var(--sg-empty-border);
+    background-color: var(--sg-empty-bg);
+    border-radius: 8px;
+    cursor: pointer;
+    position: relative;
+  }
+  
+  .subgroup.filled .sg-header {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 60px;
+    max-width: 160px;
+    height: 80px;
+    vertical-align: middle;
+    padding: 0 12px;
+    margin: 4px 8px 4px 4px;
+    background: var(--sg-header-bg);
+    color: var(--sg-color);
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 14px;
+    word-wrap: break-word;
+  }
+  
+  .subgroup.empty .sg-header {
+    display: block; position: static; font-size: 20px; font-weight: 600; color: rgba(255,255,255,0.4); 
+  }
+
+  .sg-actions {
+    position: absolute; top: 4px; right: 4px; display: flex; gap: 4px; opacity: 0; transition: opacity 0.2s; z-index: 10;
+  }
+  .sg-header:hover .sg-actions, .subgroup.empty:hover .sg-actions { opacity: 1; }
+
+  /* Image Drop Zones */
+  .tier-drop-zone { display: inline; transition: background 0.2s; }
+  .pool-drop-zone { display: flex; flex-wrap: wrap; gap: 8px; padding: 8px; align-content: flex-start; min-height: 80px; transition: background 0.2s; }
+  .tier-drop-zone.dragover, .pool-drop-zone.dragover { background: rgba(255, 255, 255, 0.08) !important; border-radius: 6px; }
+  
+  .default-zone { display: inline; }
+  .default-zone:empty {
+    display: inline-block; min-width: 150px; height: 80px; vertical-align: middle; margin: 4px; border-radius: 6px; background: transparent; border: none; transition: all 0.2s;
+  }
+  .default-zone:empty::after { content: ''; }
+  .default-zone.dragover:empty { background: rgba(255, 255, 255, 0.05); }
+
+  /* --- Image Items --- */
+  .img-item {
+    display: inline-block; 
+    width: 80px; height: 80px; vertical-align: middle; 
+    margin: 4px; border-radius: 4px; overflow: hidden; background: #000; position: relative; cursor: grab;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);
+  }
+  .img-item:active { cursor: grabbing; }
+  .img-item.dragging { opacity: 0.4; transform: scale(0.95); }
+  .img-item.selected { box-shadow: 0 0 0 4px var(--accent); transform: scale(0.92); z-index: 50; }
+  .img-item img { display: block; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+  
+  .img-item::before {
+    content: ''; position: absolute; top: 0; bottom: 0; width: 4px; background: var(--accent); z-index: 10; opacity: 0; transition: opacity 0.1s; pointer-events: none;
+  }
+  .img-item.insert-left::before { left: 0; opacity: 1; }
+  .img-item.insert-right::before { right: 0; opacity: 1; }
+  
+  .img-delete {
+    position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,0.7); color: white; width: 20px; height: 20px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; font-size: 12px; opacity: 0; transition: opacity 0.2s;
+  }
+  .img-item:hover .img-delete { opacity: 1; }
+  .img-delete:hover { background: var(--danger); }
+
+  /* Add Image Square */
+  .add-image-square {
+    width: 80px; height: 80px; border-radius: 4px; border: 2px dashed rgba(255, 255, 255, 0.2); background: rgba(255, 255, 255, 0.02);
+    display: flex; align-items: center; justify-content: center; color: rgba(255, 255, 255, 0.4); font-size: 28px; font-weight: 300; cursor: pointer; transition: all 0.2s ease;
+  }
+  .add-image-square:hover, .add-image-square.dragover-file {
+    border-color: rgba(255, 255, 255, 0.6); color: var(--text-primary); background: rgba(255, 255, 255, 0.08);
+  }
+
+  /* --- Image Pool --- */
+  .pool-section {
+    background: var(--bg-surface); border: 1px dashed var(--border-color); border-radius: var(--radius-md); padding: 24px; min-height: 150px;
+  }
+  .pool-section h3 { font-size: 15px; margin-bottom: 16px; color: var(--text-muted); }
+
+  /* --- Modals --- */
+  .zoom-modal, .confirm-modal {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.85);
+    display: flex; align-items: center; justify-content: center; z-index: 10000; opacity: 0; pointer-events: none; transition: opacity 0.2s; backdrop-filter: blur(5px);
+  }
+  .zoom-modal.active, .confirm-modal.active { opacity: 1; pointer-events: auto; }
+  
+  .zoom-modal img {
+    max-width: 90vw; max-height: 90vh; object-fit: contain; border-radius: var(--radius-md); box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    transform: scale(0.95); transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  .zoom-modal.active img { transform: scale(1); }
+  
+  .zoom-modal-close {
+    position: absolute; top: 24px; right: 24px; color: white; font-size: 32px; background: rgba(0,0,0,0.5); border: none;
+    width: 48px; height: 48px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s;
+  }
+  .zoom-modal-close:hover { background: rgba(255,255,255,0.2); }
+
+  .confirm-box {
+    background: var(--bg-surface); padding: 24px; border-radius: var(--radius-md); border: 1px solid var(--border-color);
+    text-align: center; max-width: 400px; transform: scale(0.95); transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  }
+  .confirm-modal.active .confirm-box { transform: scale(1); }
+  .confirm-box h3 { margin-bottom: 12px; color: var(--text-primary); }
+  .confirm-box p { color: var(--text-muted); margin-bottom: 24px; font-size: 14px; line-height: 1.5; }
+  .confirm-actions { display: flex; flex-direction: column; gap: 10px; justify-content: center; }
+  .confirm-actions .btn { justify-content: center; }
+  .confirm-actions-row { display: flex; gap: 10px; justify-content: center; }
+
+  /* Clean export mode: hides controls when generating the PNG */
+  body.exporting .row-controls,
+  body.exporting .tier-actions,
+  body.exporting .sg-actions,
+  body.exporting .img-delete {
+    display: none !important;
+  }
+
+  /* --- Google Auth / Sync bar --- */
+  .auth-bar {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 6px 10px;
+  }
+  .sync-status {
+    color: var(--text-muted);
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  #auth-controls { display: flex; align-items: center; gap: 8px; }
+  .auth-avatar { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; }
+  .auth-name {
+    color: var(--text-primary);
+    font-size: 13px;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .auth-btn {
+    background: var(--bg-main);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 5px 10px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .auth-btn:hover { background: var(--border-color); }
+  .auth-btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .auth-btn-primary:hover { background: var(--accent-hover); }
+  .auth-toast {
+    position: fixed;
+    top: 56px;
+    right: 12px;
+    z-index: 1000;
+    background: var(--bg-surface);
+    border: 1px solid var(--danger);
+    color: var(--text-primary);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    font-size: 12px;
+    max-width: 260px;
+  }
+  @media (max-width: 600px) {
+    .auth-bar { position: static; margin: 10px 10px 0; justify-content: flex-end; }
+    .auth-toast { position: static; margin: 8px 10px 0; }
+  }
+
+</style>
+</head>
+<body>
+
+  <!-- Hidden global inputs -->
+  <input type="file" id="coverUploadInput" style="display:none" accept="image/*">
+
+  <div class="auth-bar">
+    <span id="sync-status" class="sync-status"></span>
+    <div id="auth-controls"></div>
+  </div>
+  <div id="auth-toast-mount"></div>
+
+  <div class="container" id="app-mount"></div>
+
+<script>
+(function() {
+  window.appState = {
+    view: 'dashboard',
+    activeListId: null,
+    lists: [] // Starts completely empty now!
+  };
+
+  loadLocalState(); // restore whatever was saved locally before anything else runs
+
+  // --- History API & Browser Back Button Support ---
+  const urlParams = new URLSearchParams(window.location.search);
+  const listId = urlParams.get('list');
+  try {
+    if (listId && window.appState.lists.find(l => l.id === listId)) {
+      window.appState.view = 'builder';
+      window.appState.activeListId = listId;
+      history.replaceState({ view: 'builder', listId }, '');
+    } else {
+      history.replaceState({ view: 'dashboard' }, '');
+    }
+  } catch (e) {
+    // Ignore security errors in sandboxed preview environments
+  }
+
+  window.addEventListener('popstate', (e) => {
+    if (e.state) {
+      window.appState.view = e.state.view;
+      window.appState.activeListId = e.state.listId || null;
+      window.render();
+    }
+  });
+
+  const generateId = () => Math.random().toString(36).substr(2, 9);
+  const getRandomColor = () => '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
+
+  // Helper variables for the active builder session
+  let draggedImageId = null;
+  let draggedTierIndex = null;
+  let lastDeleteTime = 0;
+  let selectedImageId = null;
+  let scrollSpeed = 0;
+  let autoScrollReq = null;
+  
+  // Active list pointer
+  let activeData = null;
+
+  window.render = function() {
+    const mount = document.getElementById('app-mount');
+    
+    if (window.appState.view === 'dashboard') {
+      mount.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h1>My Tier Lists</h1>
+          <button class="btn primary" onclick="createNewList()">+ New Tier List</button>
+        </div>
+        ${window.appState.lists.length === 0 ? `
+          <div style="text-align: center; padding: 64px 24px; color: var(--text-muted); background: var(--bg-surface); border-radius: 12px; border: 1px dashed var(--border-color); margin-top: 32px;">
+            <h2 style="margin-bottom: 16px; color: var(--text-primary);">No tier lists yet</h2>
+            <p>Click the "+ New Tier List" button above to create your first one!</p>
+          </div>
+        ` : `
+          <div class="dashboard-grid">
+            ${window.appState.lists.map(list => `
+              <div class="list-card" onclick="openList('${list.id}')">
+                <div class="list-cover" style="background-image: ${list.cover ? `url(${list.cover})` : 'none'}">
+                  ${!list.cover ? `<div class="list-cover-placeholder">🖼️</div>` : ''}
+                  <button class="set-cover-btn" onclick="event.stopPropagation(); window.triggerCoverUpload('${list.id}')">Set Cover</button>
+                </div>
+                <div class="list-card-content">
+                  <h3 style="margin-bottom: 8px;">${list.title}</h3>
+                  <p style="color:var(--text-muted); margin: 0; font-size: 13px;">Created: ${list.date}</p>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `}
+      `;
+    } else {
+      activeData = window.appState.lists.find(l => l.id === window.appState.activeListId);
+      
+      // Inject the Builder HTML Structure
+      mount.innerHTML = `
+        <div class="header">
+          <div class="header-titles">
+            <button class="btn" onclick="window.goDashboard()" style="margin-bottom: 8px;">← Back to Dashboard</button>
+            <h1 contenteditable="true" spellcheck="false" id="listTitle" style="display:block;">${activeData.title}</h1>
+            <p>Left-click to edit text & colors. Drag images to organize. Subgroups seamlessly wrap together!</p>
+          </div>
+          <div class="toolbar">
+            <input type="file" id="fileInput" accept="image/*" multiple style="display:none">
+            <button class="btn primary" id="addTierBtn">+ Add Tier</button>
+            <button class="btn" onclick="window.downloadPNG()">Download PNG</button>
+            <button class="btn danger" id="resetBtn">Reset Options</button>
+          </div>
+        </div>
+
+        <div class="board" id="board"></div>
+
+        <div class="pool-section">
+          <h3>Unsorted Images (Drop Zone)</h3>
+          <div class="pool-drop-zone" id="poolZone"></div>
+        </div>
+      `;
+
+      // Rebind Title editing
+      const titleEl = document.getElementById('listTitle');
+      titleEl.onblur = () => { activeData.title = titleEl.innerText.trim() || 'Untitled List'; window.render(); };
+      titleEl.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); titleEl.blur(); }};
+
+      // Rebind Toolbar
+      document.getElementById('addTierBtn').onclick = () => {
+        activeData.tiers.push({ id: generateId(), name: 'New', color: '#aaaaaa', subgroups: [], images: [] });
+        renderBuilder();
+      };
+      document.getElementById('resetBtn').onclick = () => {
+        confirmModal.classList.add('active');
+      };
+      document.getElementById('fileInput').onchange = (e) => {
+        const files = Array.from(e.target.files || []);
+        if (!files.length) return;
+        
+        let processed = 0;
+        files.forEach(file => {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            activeData.pool.push({
+              id: generateId(),
+              src: event.target.result,
+              name: file.name
+            });
+            processed++;
+            if (processed === files.length) renderBuilder();
+          };
+          reader.readAsDataURL(file);
+        });
+        e.target.value = '';
+      };
+
+      // Setup the pool zone once per view swap
+      setupDropZone(document.getElementById('poolZone'), 'pool', null);
+      
+      // Render the internals
+      renderBuilder();
+    }
+  }
+
+  // --- Modals ---
+  const zoomModal = document.createElement('div');
+  zoomModal.className = 'zoom-modal';
+  const zoomImg = document.createElement('img');
+  const zoomClose = document.createElement('button');
+  zoomClose.className = 'zoom-modal-close';
+  zoomClose.innerHTML = '×';
+  zoomModal.appendChild(zoomImg);
+  zoomModal.appendChild(zoomClose);
+  document.body.appendChild(zoomModal);
+
+  const closeZoom = () => zoomModal.classList.remove('active');
+  zoomModal.onclick = (e) => { if (e.target !== zoomImg) closeZoom(); };
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeZoom(); });
+
+  const confirmModal = document.createElement('div');
+  confirmModal.className = 'confirm-modal';
+  confirmModal.innerHTML = `
+    <div class="confirm-box">
+      <h3>Reset Options</h3>
+      <p>Choose what you would like to reset. Images will be safely returned to the Unsorted Pool unless you choose to delete them entirely.</p>
+      <div class="confirm-actions">
+        <button class="btn" id="confirmClearImagesBtn">Reset Images (Move to Pool)</button>
+        <button class="btn" id="confirmResetTiersBtn">Reset Tiers (Restore Defaults)</button>
+        <button class="btn danger" id="confirmResetAllBtn">Reset Entire Board (Delete All)</button>
+        <button class="btn" id="confirmCancelBtn" style="margin-top: 12px;">Cancel</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(confirmModal);
+
+  document.getElementById('confirmCancelBtn').onclick = () => confirmModal.classList.remove('active');
+
+  // Option 1: Reset Images Only
+  document.getElementById('confirmClearImagesBtn').onclick = () => {
+    const allImages = [...activeData.pool];
+    activeData.tiers.forEach(t => {
+      allImages.push(...t.images);
+      t.images = [];
+      t.subgroups.forEach(sg => { allImages.push(...sg.images); sg.images = []; });
+    });
+    activeData.pool = allImages;
+    confirmModal.classList.remove('active');
+    renderBuilder();
+  };
+
+  // Option 2: Reset Tiers Only
+  document.getElementById('confirmResetTiersBtn').onclick = () => {
+    const allImages = [...activeData.pool];
+    activeData.tiers.forEach(t => {
+      allImages.push(...t.images);
+      t.subgroups.forEach(sg => allImages.push(...sg.images));
+    });
+    activeData.tiers = [
+      { id: generateId(), name: 'S', color: '#ff7f7f', subgroups: [], images: [] },
+      { id: generateId(), name: 'A', color: '#ffbf7f', subgroups: [], images: [] },
+      { id: generateId(), name: 'B', color: '#ffdf7f', subgroups: [], images: [] },
+      { id: generateId(), name: 'C', color: '#ffff7f', subgroups: [], images: [] },
+      { id: generateId(), name: 'D', color: '#bfff7f', subgroups: [], images: [] }
+    ];
+    activeData.pool = allImages;
+    confirmModal.classList.remove('active');
+    renderBuilder();
+  };
+
+  // Option 3: Reset Entire Board
+  document.getElementById('confirmResetAllBtn').onclick = () => {
+    activeData.tiers = [
+      { id: generateId(), name: 'S', color: '#ff7f7f', subgroups: [], images: [] },
+      { id: generateId(), name: 'A', color: '#ffbf7f', subgroups: [], images: [] },
+      { id: generateId(), name: 'B', color: '#ffdf7f', subgroups: [], images: [] },
+      { id: generateId(), name: 'C', color: '#ffff7f', subgroups: [], images: [] },
+      { id: generateId(), name: 'D', color: '#bfff7f', subgroups: [], images: [] }
+    ];
+    activeData.pool = [];
+    confirmModal.classList.remove('active');
+    renderBuilder();
+  };
+
+  // Generic Action Modal (replaces browser confirm())
+  const actionModal = document.createElement('div');
+  actionModal.className = 'confirm-modal';
+  actionModal.innerHTML = `
+    <div class="confirm-box">
+      <h3 id="actionModalTitle">Are you sure?</h3>
+      <p id="actionModalText">This action cannot be undone.</p>
+      <div class="confirm-actions-row">
+        <button class="btn" id="actionModalCancelBtn">Cancel</button>
+        <button class="btn danger" id="actionModalConfirmBtn">Yes, Delete</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(actionModal);
+  let currentActionCallback = null;
+  
+  document.getElementById('actionModalCancelBtn').onclick = () => actionModal.classList.remove('active');
+  document.getElementById('actionModalConfirmBtn').onclick = () => {
+    actionModal.classList.remove('active');
+    if (currentActionCallback) currentActionCallback();
+  };
+
+  window.promptAction = (title, text, callback) => {
+    document.getElementById('actionModalTitle').innerText = title;
+    document.getElementById('actionModalText').innerText = text;
+    currentActionCallback = callback;
+    actionModal.classList.add('active');
+  };
+
+  // --- Dashboard Cover Image Handler ---
+  document.getElementById('coverUploadInput').onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const list = window.appState.lists.find(l => l.id === window.activeCoverId);
+      if (list) {
+        list.cover = event.target.result;
+        window.render();
+      }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+
+  // --- Core Builder Functions ---
+  function getTextColor(hexColor) {
+    const hex = hexColor.replace('#', '');
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+    const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+    return (yiq >= 128) ? '#111111' : '#f5f5f5';
+  }
+
+  function setSubgroupColors(el, hexColor) {
+    let r = 0, g = 0, b = 0;
+    const hex = hexColor.replace('#', '');
+    if (hex.length === 6) {
+        r = parseInt(hex.substr(0, 2), 16);
+        g = parseInt(hex.substr(2, 2), 16);
+        b = parseInt(hex.substr(4, 2), 16);
+    }
+    // Standard RGBA colors that html-to-image perfectly understands
+    el.style.setProperty('--sg-color', hexColor);
+    el.style.setProperty('--sg-bg', `rgba(${r}, ${g}, ${b}, 0.06)`);
+    el.style.setProperty('--sg-border', `rgba(${r}, ${g}, ${b}, 0.15)`);
+    el.style.setProperty('--sg-header-bg', `rgba(${r}, ${g}, ${b}, 0.20)`);
+    el.style.setProperty('--sg-empty-border', `rgba(${r}, ${g}, ${b}, 0.30)`);
+    el.style.setProperty('--sg-empty-bg', `rgba(${r}, ${g}, ${b}, 0.05)`);
+  }
+
+  function findImage(imgId) {
+    let img = activeData.pool.find(i => i.id === imgId);
+    if (img) return img;
+    for (const t of activeData.tiers) {
+      img = t.images.find(i => i.id === imgId);
+      if (img) return img;
+      for (const sg of t.subgroups) {
+        img = sg.images.find(i => i.id === imgId);
+        if (img) return img;
+      }
+    }
+    return null;
+  }
+
+  function findImageLocation(imgId) {
+    if (activeData.pool.some(i => i.id === imgId)) return { type: 'pool', id: null };
+    for (const t of activeData.tiers) {
+      if (t.images.some(i => i.id === imgId)) return { type: 'tier', id: t.id };
+      for (const sg of t.subgroups) {
+        if (sg.images.some(i => i.id === imgId)) return { type: 'subgroup', id: sg.id };
+      }
+    }
+    return null;
+  }
+
+  function removeImageFromState(imgId) {
+    activeData.pool = activeData.pool.filter(i => i.id !== imgId);
+    activeData.tiers.forEach(t => {
+      t.images = t.images.filter(i => i.id !== imgId);
+      t.subgroups.forEach(sg => {
+        sg.images = sg.images.filter(i => i.id !== imgId);
+      });
+    });
+  }
+
+  function addImageToState(img, targetType, targetId, relativeToImgId = null, insertAfter = false) {
+    let targetArray = null;
+    if (targetType === 'pool') {
+      targetArray = activeData.pool;
+    } else if (targetType === 'tier') {
+      const t = activeData.tiers.find(t => t.id === targetId);
+      if (t) targetArray = t.images;
+    } else if (targetType === 'subgroup') {
+      for (const t of activeData.tiers) {
+        const sg = t.subgroups.find(s => s.id === targetId);
+        if (sg) { targetArray = sg.images; break; }
+      }
+    }
+
+    if (targetArray) {
+      if (relativeToImgId) {
+        const idx = targetArray.findIndex(i => i.id === relativeToImgId);
+        if (idx !== -1) {
+          targetArray.splice(insertAfter ? idx + 1 : idx, 0, img);
+          return;
+        }
+      }
+      targetArray.push(img);
+    }
+  }
+
+  // --- Scroll logic ---
+  function scrollLoop() {
+    if (scrollSpeed !== 0) window.scrollBy(0, scrollSpeed);
+    autoScrollReq = requestAnimationFrame(scrollLoop);
+  }
+  function startAutoScroll() { if (!autoScrollReq) scrollLoop(); }
+  function stopAutoScroll() {
+    scrollSpeed = 0;
+    if (autoScrollReq) { cancelAnimationFrame(autoScrollReq); autoScrollReq = null; }
+  }
+
+  document.addEventListener('dragover', (e) => {
+    if (!draggedImageId && draggedTierIndex === null) return;
+    const threshold = 100;
+    const maxSpeed = 15;
+    const y = e.clientY;
+    const h = window.innerHeight;
+    if (y < threshold) scrollSpeed = -maxSpeed * (1 - Math.max(0, y) / threshold);
+    else if (h - y < threshold) scrollSpeed = maxSpeed * (1 - Math.max(0, h - y) / threshold);
+    else scrollSpeed = 0;
+  });
+
+  document.addEventListener('wheel', (e) => {
+    if (draggedImageId || draggedTierIndex !== null) {
+      e.preventDefault();
+      window.scrollBy(e.deltaX, e.deltaY);
+    }
+  }, { passive: false });
+
+  document.addEventListener('click', (e) => {
+    if (selectedImageId && window.matchMedia("(pointer: coarse)").matches) {
+      if (!e.target.closest('.img-item') && !e.target.closest('.tier-content') && !e.target.closest('.pool-drop-zone') && !e.target.closest('.subgroup')) {
+        selectedImageId = null;
+        renderBuilder();
+      }
+    }
+  });
+
+  // --- Core UI Builders ---
+  function setupDragSource(el, img) {
+    el.draggable = true;
+    el.addEventListener('dragstart', (e) => {
+      draggedImageId = img.id;
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', img.id);
+      setTimeout(() => el.classList.add('dragging'), 0);
+      startAutoScroll();
+    });
+    el.addEventListener('dragend', () => {
+      el.classList.remove('dragging');
+      draggedImageId = null;
+      stopAutoScroll();
+    });
+  }
+
+  function setupDropZone(el, targetType, targetId) {
+    let lastActiveItem = null;
+    let activeItemRect = null;
+    let currentInsertAfter = false;
+
+    el.addEventListener('click', (e) => {
+      if (window.matchMedia("(pointer: coarse)").matches && selectedImageId) {
+        e.stopPropagation();
+        const img = findImage(selectedImageId);
+        if (img) {
+          removeImageFromState(selectedImageId);
+          addImageToState(img, targetType, targetId, null, false);
+          selectedImageId = null;
+          renderBuilder();
+        }
+      }
+    });
+
+    el.addEventListener('dragover', (e) => {
+      if (draggedImageId) {
+        e.preventDefault();
+        e.stopPropagation(); 
+        e.dataTransfer.dropEffect = 'move';
+        el.classList.add('dragover');
+        
+        const imgItem = e.target.closest('.img-item');
+        
+        if (lastActiveItem && lastActiveItem !== imgItem) {
+          lastActiveItem.classList.remove('insert-left', 'insert-right');
+          lastActiveItem = null;
+          activeItemRect = null;
+        }
+
+        if (imgItem && imgItem.dataset.id !== draggedImageId) {
+          if (lastActiveItem !== imgItem) {
+             lastActiveItem = imgItem;
+             activeItemRect = imgItem.getBoundingClientRect();
+          }
+          const mid = activeItemRect.left + activeItemRect.width / 2;
+          currentInsertAfter = e.clientX >= mid;
+          if (!currentInsertAfter) {
+            if (!imgItem.classList.contains('insert-left')) {
+              imgItem.classList.remove('insert-right');
+              imgItem.classList.add('insert-left');
+            }
+          } else {
+            if (!imgItem.classList.contains('insert-right')) {
+              imgItem.classList.remove('insert-left');
+              imgItem.classList.add('insert-right');
+            }
+          }
+        }
+      }
+    });
+    
+    el.addEventListener('dragleave', (e) => {
+      e.stopPropagation();
+      if (!el.contains(e.relatedTarget)) {
+        el.classList.remove('dragover');
+        if (lastActiveItem) {
+          lastActiveItem.classList.remove('insert-left', 'insert-right');
+          lastActiveItem = null;
+          activeItemRect = null;
+        }
+      }
+    });
+    
+    el.addEventListener('drop', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      el.classList.remove('dragover');
+      
+      let targetImgId = null;
+      let insertAfter = false;
+
+      if (lastActiveItem) {
+        targetImgId = lastActiveItem.dataset.id;
+        insertAfter = currentInsertAfter;
+        lastActiveItem.classList.remove('insert-left', 'insert-right');
+        lastActiveItem = null;
+        activeItemRect = null;
+      }
+      
+      if (draggedImageId) {
+        const img = findImage(draggedImageId);
+        if (img) {
+          removeImageFromState(draggedImageId);
+          addImageToState(img, targetType, targetId, targetImgId, insertAfter);
+          renderBuilder();
+        }
+      }
+    });
+  }
+
+  function createElement(tag, className, innerHTML = '') {
+    const el = document.createElement(tag);
+    if (className) el.className = className;
+    if (innerHTML) el.innerHTML = innerHTML;
+    return el;
+  }
+
+  function renderImage(img) {
+    const wrapper = createElement('div', 'img-item');
+    if (img.id === selectedImageId) wrapper.classList.add('selected');
+    wrapper.dataset.id = img.id;
+    const imageEl = createElement('img');
+    imageEl.src = img.src;
+    
+    wrapper.onclick = (e) => {
+      if (window.matchMedia("(pointer: coarse)").matches) {
+        e.stopPropagation();
+        if (selectedImageId === img.id) {
+          selectedImageId = null; // deselect
+          renderBuilder();
+        } else if (selectedImageId) {
+          const loc = findImageLocation(img.id);
+          const sImg = findImage(selectedImageId);
+          if (loc && sImg) {
+            removeImageFromState(selectedImageId);
+            addImageToState(sImg, loc.type, loc.id, img.id, false); // Insert before this image
+            selectedImageId = null;
+            renderBuilder();
+          }
+        } else {
+          selectedImageId = img.id; // select
+          renderBuilder();
+        }
+      }
+    };
+
+    wrapper.ondblclick = (e) => {
+      e.stopPropagation();
+      if (Date.now() - lastDeleteTime < 300) return;
+      zoomImg.src = img.src;
+      zoomModal.classList.add('active');
+    };
+    
+    const delBtn = createElement('button', 'img-delete', '×');
+    delBtn.onclick = (e) => {
+      e.stopPropagation();
+      lastDeleteTime = Date.now(); 
+      
+      const inPool = activeData.pool.some(i => i.id === img.id);
+      removeImageFromState(img.id);
+      
+      if (!inPool) {
+        activeData.pool.push(img); 
+      }
+      
+      renderBuilder();
+    };
+
+    wrapper.appendChild(imageEl);
+    wrapper.appendChild(delBtn);
+    setupDragSource(wrapper, img);
+    return wrapper;
+  }
+
+  function renderSubgroup(sg, tier) {
+    const isFilled = sg.images.length > 0;
+    const sgEl = createElement('div', `subgroup ${isFilled ? 'filled' : 'empty'}`);
+    setSubgroupColors(sgEl, sg.color);
+    
+    const header = createElement('div', 'sg-header');
+    const title = createElement('div', 'sg-title', sg.name);
+    title.contentEditable = true;
+    title.spellcheck = false;
+    title.onfocus = () => { if (title.innerText === 'New') title.innerText = ''; };
+    title.onblur = () => { sg.name = title.innerText.trim() || 'New'; renderBuilder(); };
+    title.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); title.blur(); }};
+    
+    const actions = createElement('div', 'sg-actions');
+    
+    const colorBtn = createElement('button', 'action-btn', '🎨');
+    const colorInput = createElement('input');
+    colorInput.type = 'color';
+    colorInput.value = sg.color;
+    colorInput.oninput = (e) => { 
+      sg.color = e.target.value; 
+      setSubgroupColors(sgEl, sg.color); 
+    };
+    colorInput.onchange = () => renderBuilder(); 
+    colorBtn.onclick = () => colorInput.click();
+    colorBtn.appendChild(colorInput);
+
+    const delBtn = createElement('button', 'action-btn', '×');
+    delBtn.style.color = '#ff6b6b';
+    delBtn.onclick = () => {
+      tier.images.push(...sg.images);
+      tier.subgroups = tier.subgroups.filter(s => s.id !== sg.id);
+      renderBuilder();
+    };
+
+    actions.appendChild(colorBtn);
+    actions.appendChild(delBtn);
+    
+    header.appendChild(title);
+    header.appendChild(actions);
+    
+    if (isFilled) {
+      sgEl.appendChild(header);
+      const dropZone = createElement('div', 'tier-drop-zone');
+      setupDropZone(dropZone, 'subgroup', sg.id);
+      sg.images.forEach(img => dropZone.appendChild(renderImage(img)));
+      sgEl.appendChild(dropZone);
+    } else {
+      sgEl.appendChild(header);
+      setupDropZone(sgEl, 'subgroup', sg.id);
+    }
+
+    return sgEl;
+  }
+
+  function renderTier(tier, index) {
+    const row = createElement('div', 'tier-row');
+    
+    const label = createElement('div', 'tier-label');
+    label.style.backgroundColor = tier.color;
+    label.style.color = getTextColor(tier.color);
+    
+    const labelText = createElement('div', 'tier-label-text', tier.name);
+    labelText.contentEditable = true;
+    labelText.spellcheck = false;
+    labelText.onfocus = () => { if (labelText.innerText === 'New') labelText.innerText = ''; };
+    labelText.onblur = () => { tier.name = labelText.innerText.trim() || 'New'; renderBuilder(); };
+    labelText.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); labelText.blur(); }};
+    
+    const actions = createElement('div', 'tier-actions');
+    const colorBtn = createElement('button', 'action-btn', '🎨');
+    const colorInput = createElement('input');
+    colorInput.type = 'color'; colorInput.value = tier.color;
+    colorInput.oninput = (e) => { 
+      tier.color = e.target.value; 
+      label.style.backgroundColor = tier.color; 
+      label.style.color = getTextColor(tier.color); 
+    };
+    colorInput.onchange = () => renderBuilder(); 
+    colorBtn.onclick = () => colorInput.click();
+    colorBtn.appendChild(colorInput);
+    actions.appendChild(colorBtn);
+
+    label.appendChild(labelText);
+    label.appendChild(actions);
+    row.appendChild(label);
+
+    const content = createElement('div', 'tier-content');
+    
+    setupDropZone(content, 'tier', tier.id);
+    
+    tier.subgroups.forEach(sg => {
+      content.appendChild(renderSubgroup(sg, tier));
+    });
+
+    tier.images.forEach(img => content.appendChild(renderImage(img)));
+    
+    row.appendChild(content);
+
+    const controls = createElement('div', 'row-controls');
+    
+    const addSgBtn = createElement('button', '', '+');
+    addSgBtn.title = "Add Subgroup";
+    addSgBtn.onclick = () => {
+      tier.subgroups.push({ id: generateId(), name: 'New', color: getRandomColor(), images: [] });
+      renderBuilder();
+    };
+
+    const dragHandle = createElement('div', 'drag-handle', '≡');
+    dragHandle.title = "Drag to reorder tier";
+    dragHandle.onmousedown = () => row.draggable = true;
+    dragHandle.onmouseup = () => row.draggable = false;
+    dragHandle.onmouseleave = () => row.draggable = false;
+
+    row.addEventListener('dragstart', (e) => {
+      if (e.target.closest('.img-item')) return;
+      if (!row.draggable) { e.preventDefault(); return; }
+      
+      draggedTierIndex = index;
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', 'tier');
+      setTimeout(() => row.classList.add('dragging-tier'), 0);
+      startAutoScroll();
+    });
+
+    row.addEventListener('dragend', () => {
+      row.classList.remove('dragging-tier');
+      row.draggable = false;
+      draggedTierIndex = null;
+      stopAutoScroll();
+    });
+
+    row.addEventListener('dragover', (e) => {
+      if (draggedTierIndex !== null && draggedTierIndex !== index) {
+        e.preventDefault();
+        const bounding = row.getBoundingClientRect();
+        const offset = e.clientY - bounding.top;
+        if (offset > bounding.height / 2) {
+          row.classList.remove('dragover-tier-top');
+          row.classList.add('dragover-tier-bottom');
+        } else {
+          row.classList.remove('dragover-tier-bottom');
+          row.classList.add('dragover-tier-top');
+        }
+      }
+    });
+
+    row.addEventListener('dragleave', () => {
+      row.classList.remove('dragover-tier-top', 'dragover-tier-bottom');
+    });
+
+    row.addEventListener('drop', (e) => {
+      row.classList.remove('dragover-tier-top', 'dragover-tier-bottom');
+      if (draggedTierIndex !== null && draggedTierIndex !== index) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const bounding = row.getBoundingClientRect();
+        const offset = e.clientY - bounding.top;
+        let dropIndex = index;
+        if (offset > bounding.height / 2) {
+          dropIndex++;
+        }
+        
+        const movedTier = activeData.tiers.splice(draggedTierIndex, 1)[0];
+        if (draggedTierIndex < dropIndex) {
+          dropIndex--;
+        }
+        
+        activeData.tiers.splice(dropIndex, 0, movedTier);
+        renderBuilder();
+      }
+    });
+
+    const delTierBtn = createElement('button', 'del', '×');
+    delTierBtn.title = "Delete Tier";
+    delTierBtn.onclick = () => {
+      window.promptAction("Delete Tier?", "Images inside this tier will be moved back to the Unsorted Pool.", () => {
+        tier.images.forEach(img => activeData.pool.push(img));
+        tier.subgroups.forEach(sg => sg.images.forEach(img => activeData.pool.push(img)));
+        activeData.tiers.splice(index, 1);
+        renderBuilder();
+      });
+    };
+
+    controls.appendChild(addSgBtn);
+    controls.appendChild(dragHandle);
+    controls.appendChild(delTierBtn);
+    
+    row.appendChild(controls);
+
+    return row;
+  }
+
+  function renderPool() {
+    const poolZoneEl = document.getElementById('poolZone');
+    poolZoneEl.innerHTML = '';
+    
+    activeData.pool.forEach(img => poolZoneEl.appendChild(renderImage(img)));
+    
+    const addSquare = createElement('div', 'add-image-square', '+');
+    addSquare.title = "Upload new images (or drop files here)";
+    addSquare.onclick = () => document.getElementById('fileInput').click();
+    
+    addSquare.addEventListener('dragover', (e) => {
+      if (!draggedImageId) {
+        e.preventDefault(); 
+        e.stopPropagation();
+        e.dataTransfer.dropEffect = 'copy';
+        addSquare.classList.add('dragover-file');
+      }
+    });
+    
+    addSquare.addEventListener('dragleave', (e) => {
+      if (!draggedImageId) {
+        e.preventDefault();
+        e.stopPropagation();
+        addSquare.classList.remove('dragover-file');
+      }
+    });
+    
+    addSquare.addEventListener('drop', (e) => {
+      if (!draggedImageId) {
+        e.preventDefault();
+        e.stopPropagation();
+        addSquare.classList.remove('dragover-file');
+        
+        const files = Array.from(e.dataTransfer.files || []).filter(f => f.type.startsWith('image/'));
+        if (!files.length) return;
+        
+        let processed = 0;
+        files.forEach(file => {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            activeData.pool.push({
+              id: generateId(),
+              src: event.target.result,
+              name: file.name
+            });
+            processed++;
+            if (processed === files.length) renderBuilder();
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+    });
+
+    poolZoneEl.appendChild(addSquare);
+  }
+
+  function renderBuilder() {
+    const scrollY = window.scrollY;
+    
+    const boardEl = document.getElementById('board');
+    boardEl.innerHTML = '';
+    activeData.tiers.forEach((t, i) => {
+      boardEl.appendChild(renderTier(t, i));
+    });
+
+    renderPool();
+    window.scrollTo(0, scrollY);
+  }
+
+  // --- Navigation & App Features ---
+  window.triggerCoverUpload = (id) => {
+    window.activeCoverId = id;
+    document.getElementById('coverUploadInput').click();
+  };
+
+  window.goDashboard = () => {
+    window.appState.view = 'dashboard';
+    window.appState.activeListId = null;
+    try { history.pushState({ view: 'dashboard' }, ''); } catch (e) {}
+    window.render();
+  };
+
+  window.createNewList = () => {
+    const id = Math.random().toString(36).substr(2, 9);
+
+    // Fully blank empty state on creation! No demo images.
+    window.appState.lists.push({ 
+      id, 
+      title: 'New List', 
+      date: new Date().toISOString().split('T')[0],
+      cover: null,
+      tiers: [
+        { id: generateId(), name: 'S', color: '#ff7f7f', subgroups: [], images: [] },
+        { id: generateId(), name: 'A', color: '#ffbf7f', subgroups: [], images: [] },
+        { id: generateId(), name: 'B', color: '#ffdf7f', subgroups: [], images: [] },
+        { id: generateId(), name: 'C', color: '#ffff7f', subgroups: [], images: [] },
+        { id: generateId(), name: 'D', color: '#bfff7f', subgroups: [], images: [] }
+      ],
+      pool: []
+    });
+    window.appState.activeListId = id;
+    window.appState.view = 'builder';
+    try { history.pushState({ view: 'builder', listId: id }, ''); } catch (e) {}
+    window.render();
+  };
+
+  window.openList = (id) => {
+    window.appState.activeListId = id;
+    window.appState.view = 'builder';
+    try { history.pushState({ view: 'builder', listId: id }, ''); } catch (e) {}
+    window.render();
+  };
+
+  window.downloadPNG = () => {
+    const board = document.getElementById('board');
+    
+    // Hide UI controls 
+    document.body.classList.add('exporting');
+    
+    // Fix for inline wrapping bug in html-to-image
+    const fakeBgs = [];
+    const subgroups = board.querySelectorAll('.subgroup.filled');
+    const itemsToElevate = board.querySelectorAll('.img-item, .sg-header');
+    
+    subgroups.forEach(sg => {
+      // getClientRects is a magic browser API that perfectly measures EVERY line 
+      // of a multi-line wrapped inline element. We trace them perfectly.
+      const rects = sg.getClientRects();
+      const tierContent = sg.closest('.tier-content');
+      const tcRect = tierContent.getBoundingClientRect();
+      
+      const cs = window.getComputedStyle(sg);
+      const bgColor = cs.backgroundColor;
+      const border = cs.borderTopWidth + ' solid ' + cs.borderTopColor;
+      const borderRadius = cs.borderRadius;
+      
+      Array.from(rects).forEach(rect => {
+          if(rect.width < 10 || rect.height < 10) return; // ignore ghost fragments
+          
+          const fakeBg = document.createElement('div');
+          fakeBg.style.boxSizing = 'border-box';
+          fakeBg.style.position = 'absolute';
+          fakeBg.style.top = (rect.top - tcRect.top + tierContent.scrollTop) + 'px';
+          fakeBg.style.left = (rect.left - tcRect.left + tierContent.scrollLeft) + 'px';
+          fakeBg.style.width = rect.width + 'px';
+          fakeBg.style.height = rect.height + 'px';
+          fakeBg.style.backgroundColor = bgColor;
+          fakeBg.style.border = border;
+          fakeBg.style.borderRadius = borderRadius;
+          fakeBg.style.zIndex = '0';
+          
+          tierContent.appendChild(fakeBg);
+          fakeBgs.push(fakeBg);
+      });
+      
+      // Hide the buggy original background before snapshot
+      sg.dataset.origBg = sg.style.backgroundColor;
+      sg.dataset.origBorderColor = sg.style.borderColor;
+      sg.style.backgroundColor = 'transparent';
+      sg.style.borderColor = 'transparent';
+    });
+    
+    // Elevate images above the fake backgrounds
+    itemsToElevate.forEach(item => {
+        item.style.position = 'relative';
+        item.style.zIndex = '2';
+    });
+
+    setTimeout(() => {
+      htmlToImage.toPng(board, { 
+        backgroundColor: '#1e1e1e',
+        pixelRatio: 2 // High resolution
+      }).then(dataUrl => {
+        cleanupExport();
+        const link = document.createElement('a');
+        link.download = (activeData.title.trim() || 'TierList') + '.png';
+        link.href = dataUrl;
+        link.click();
+      }).catch(err => {
+        cleanupExport();
+        console.error('Export Error:', err);
+      });
+    }, 100);
+
+    function cleanupExport() {
+        document.body.classList.remove('exporting');
+        fakeBgs.forEach(bg => bg.remove()); // Destroy fakes
+        subgroups.forEach(sg => { // Restore original layout
+            sg.style.backgroundColor = sg.dataset.origBg || '';
+            sg.style.borderColor = sg.dataset.origBorderColor || '';
+        });
+        itemsToElevate.forEach(item => {
+            item.style.position = '';
+            item.style.zIndex = '';
+        });
+    }
+  };
+
+  // ============================================================
+  // Persistence: localStorage (always) + Google Drive (when signed in)
+  // ============================================================
+  const STORAGE_KEY = 'tierListBuilderState_v1';
+  let isSignedIn = false;
+  let driveSaveTimer = null;
+  let suppressNextPersist = false; // avoid immediately re-uploading data we just pulled from Drive
+
+  function loadLocalState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (parsed && Array.isArray(parsed.lists)) {
+        window.appState.lists = parsed.lists;
+      }
+    } catch (e) {
+      console.warn('Could not read local save:', e);
+    }
+  }
+
+  function saveLocalState() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ lists: window.appState.lists }));
+    } catch (e) {
+      console.warn('Could not write local save:', e);
+    }
+  }
+
+  function persistState() {
+    saveLocalState();
+    if (suppressNextPersist) { suppressNextPersist = false; return; }
+    queueDriveSave();
+  }
+
+  function queueDriveSave() {
+    if (!isSignedIn) return;
+    setSyncStatus('pending');
+    clearTimeout(driveSaveTimer);
+    driveSaveTimer = setTimeout(doDriveSave, 1500);
+  }
+
+  async function doDriveSave() {
+    if (!isSignedIn) return;
+    setSyncStatus('saving');
+    try {
+      const res = await fetch('/api/drive/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lists: window.appState.lists }),
+      });
+      if (res.status === 401) { isSignedIn = false; setSyncStatus('offline'); return; }
+      if (!res.ok) throw new Error('save failed');
+      setSyncStatus('saved');
+    } catch (e) {
+      console.warn('Drive save failed:', e);
+      setSyncStatus('error');
+    }
+  }
+
+  async function doDriveLoad() {
+    try {
+      const res = await fetch('/api/drive/load');
+      if (res.status === 401) { isSignedIn = false; return; }
+      const data = await res.json();
+      if (data.found && data.data && Array.isArray(data.data.lists)) {
+        window.appState.lists = data.data.lists;
+        suppressNextPersist = true; // this came FROM Drive — don't bounce it right back
+        saveLocalState();
+        window.render();
+      }
+    } catch (e) {
+      console.warn('Drive load failed:', e);
+    }
+  }
+
+  function setSyncStatus(status) {
+    const el = document.getElementById('sync-status');
+    if (!el) return;
+    const map = {
+      saved: 'Saved to Drive',
+      saving: 'Saving…',
+      pending: 'Saving…',
+      error: 'Sync error — retrying next change',
+      offline: 'Saved on this device only',
+    };
+    el.textContent = map[status] || '';
+  }
+
+  // ============================================================
+  // Google Sign-In
+  // ============================================================
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str == null ? '' : str;
+    return div.innerHTML;
+  }
+
+  function renderAuthControls(data) {
+    const el = document.getElementById('auth-controls');
+    if (!el) return;
+    if (data.loggedIn) {
+      el.innerHTML = `
+        ${data.profile.picture ? `<img src="${escapeHtml(data.profile.picture)}" class="auth-avatar" alt="">` : ''}
+        <span class="auth-name">${escapeHtml(data.profile.name || data.profile.email || 'Signed in')}</span>
+        <button id="signOutBtn" class="auth-btn">Sign out</button>
+      `;
+      document.getElementById('signOutBtn').onclick = signOut;
+    } else {
+      el.innerHTML = `<button id="signInBtn" class="auth-btn auth-btn-primary">Sign in with Google</button>`;
+      document.getElementById('signInBtn').onclick = () => { window.location.href = '/api/auth/login'; };
+    }
+  }
+
+  async function signOut() {
+    try { await fetch('/api/auth/logout', { method: 'POST' }); } catch (e) { /* ignore */ }
+    isSignedIn = false;
+    setSyncStatus('offline');
+    renderAuthControls({ loggedIn: false });
+  }
+
+  async function checkAuthStatus() {
+    try {
+      const res = await fetch('/api/auth/status');
+      const data = await res.json();
+      isSignedIn = !!data.loggedIn;
+      renderAuthControls(data);
+      if (isSignedIn) {
+        await doDriveLoad();
+        setSyncStatus('saved');
+      } else {
+        setSyncStatus('offline');
+      }
+    } catch (e) {
+      console.warn('Auth status check failed:', e);
+      setSyncStatus('offline');
+    }
+  }
+
+  function showAuthErrorIfAny() {
+    const params = new URLSearchParams(window.location.search);
+    const err = params.get('auth_error');
+    if (!err) return;
+    const mount = document.getElementById('auth-toast-mount');
+    if (mount) {
+      mount.innerHTML = `<div class="auth-toast">Google sign-in failed: ${escapeHtml(err)}</div>`;
+      setTimeout(() => { mount.innerHTML = ''; }, 6000);
+    }
+    params.delete('auth_error');
+    const clean = window.location.pathname + (params.toString() ? `?${params}` : '');
+    history.replaceState(history.state, '', clean);
+  }
+
+  // Wrap render() so every UI update also triggers a local + Drive save
+  const _originalRender = window.render;
+  window.render = function(...args) {
+    _originalRender.apply(this, args);
+    persistState();
+  };
+
+  // Launch app
+  window.render();
+  showAuthErrorIfAny();
+  checkAuthStatus();
+
+})();
+</script>
+
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("sw.js").catch((err) => {
+        console.warn("Service worker registration failed:", err);
+      });
+    });
+  }
+</script>
+</body>
+</html>

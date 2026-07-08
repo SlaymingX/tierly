@@ -1,0 +1,9 @@
+{
+  "name": "tier-list-pwa",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Pro Tier List Builder - PWA with Google login and Drive sync",
+  "dependencies": {
+    "cookie": "^0.6.0"
+  }
+}
