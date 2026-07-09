@@ -7,7 +7,7 @@
 
 <!-- PWA -->
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#121212">
+<meta name="theme-color" content="#1e1e1e">
 <meta name="background-color" content="#121212">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -458,7 +458,7 @@
   /* On narrow / PWA screens the pool used to scroll away with the rest of the
      page — pin it to the bottom of the viewport instead, collapsible so it
      doesn't permanently eat screen space. */
-  @media (max-width: 768px) {
+  @media (max-width: 768px), (max-height: 500px) and (orientation: landscape) {
     .container { padding-bottom: calc(180px + env(safe-area-inset-bottom, 0px)); }
 
     .pool-section {
@@ -551,7 +551,7 @@
     justify-content: flex-end;
     flex-wrap: wrap;
     gap: 10px;
-    padding: 10px 24px;
+    padding: calc(10px + env(safe-area-inset-top, 0px)) 24px 10px;
     background: var(--bg-surface);
     border-bottom: 1px solid var(--border-color);
   }
@@ -622,7 +622,7 @@
     opacity: 1;
     transform: translate(-50%, 0);
   }
-  @media (max-width: 600px) {
+  @media (max-width: 600px), (max-height: 500px) and (orientation: landscape) {
     .auth-bar { padding: 10px 12px; }
     #auth-toast-mount { padding: 0 12px; }
   }
